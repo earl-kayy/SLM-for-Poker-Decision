@@ -1,0 +1,90 @@
+# ==========================================================
+# Poker LLM Fine-tuning Configuration Guide
+# ==========================================================
+
+# [1] 모델 및 데이터 경로 설정
+# ----------------------------------------------------------
+base_model: "meta-llama/Meta-Llama-3-8B"  # HuggingFace ID or Local Path
+data:
+  train_path: "data/train"
+  # 테스트 데이터 경로 (옵션)
+  test_preflop_path: "data/test/preflop.json"
+  test_postflop_path: "data/test/postflop.json"
+adapter_path: ~~
+# [2] 토크나이저 설정
+# ----------------------------------------------------------
+tokenizer:
+  max_length: 512       # 입력 시퀀스의 최대 길이 (메모리에 큰 영향)
+  padding_side: "right" # Llama 계열은 보통 right, 일부 모델은 left
+
+# [3] 양자화 설정 (Quantization)
+# ----------------------------------------------------------
+# 주의: Mac(MPS) 사용 시 load_in_4bit는 반드시 False여야 함
+quant:
+  load_in_4bit: True    # True: QLoRA(Colab/CUDA), False: Standard LoRA(Mac)
+  quant_type: "nf4"     # 4bit quantization type (nf4 is recommended)
+  double_quant: True    # 2차 양자화 (메모리 절약)
+
+# [4] LoRA 어댑터 설정
+# ----------------------------------------------------------
+lora:
+  r: 32                 # Rank: 클수록 성능 좋음, 메모리 많이 먹음 (8, 16, 32, 64)
+  alpha: 64             # 보통 r의 2배로 설정하는 것이 국룰
+  dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  # 적용할 모듈 (모델 아키텍처마다 이름이 다름. 아래는 Llama 기준)
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+# [5] 훈련 하이퍼파라미터 (Training Arguments)
+# ----------------------------------------------------------
+train:
+  output_dir: "checkpoints/poker_v1"  # 결과물이 저장될 폴더
+  seed: 42                            # 재현성을 위한 시드 고정
+
+  # 배치 사이즈
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 8       # 평가는 학습보다 크게 잡아도 됨 (보통 2배)
+  gradient_accumulation_steps: 8      # 실제 배치 = train_batch * accumulation (여기선 4*8=32)
+
+  # 학습률 및 스케줄러
+  learning_rate: 0.00005              # 5e-5
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.05
+
+  # 학습 기간 (둘 중 하나 선택, 나머지는 주석 처리 권장)
+  num_train_epochs: 3                 # 전체 데이터 3바퀴
+  # max_steps: 1000                   # (옵션) 특정 스텝까지만 학습하고 싶을 때
+
+  # 정밀도 (Hardware Dependent)
+  bf16: False         # A100, H100, Mac(M1/M2/M3) 사용 시 True 권장
+  fp16: True          # T4, V100 등 구형 GPU 사용 시 True
+
+  # 최적화 및 효율
+  gradient_checkpointing: True        # 메모리 절약 (속도는 약간 느려짐)
+  optim: "paged_adamw_8bit"           # QLoRA 사용 시 필수, Mac은 "adamw_torch" 권장
+  completion_only_loss: True          # Prompt는 학습 안 하고 Answer만 학습할지 여부 (DataCollator용)
+
+  # 로깅 및 저장
+  logging_steps: 10
+  save_steps: 100
+  eval_steps: 100
+  save_total_limit: 2                 # 체크포인트 너무 많이 쌓이지 않게 (최신 2개만 유지)
+  
+  # 평가 전략
+  eval_strategy: "steps"              # "steps" or "epoch"
+  save_strategy: "steps"
+  load_best_model_at_end: True
+  metric_for_best_model: "eval_loss"
+  greater_is_better: False            # Loss는 낮을수록 좋으므로 False
+
+  # 실험 기록 (WandB 등)
+  report_to: "none"                   # "wandb" or "none"
+  # run_name: "poker-experiment-1"    # wandb 사용 시 실험 이름

@@ -1,0 +1,54 @@
+base_model: google/gemma-3-1b-it
+output_dir: adapter_checkpoint/new_file_name
+
+# ===== Tokenizer Configurations =====
+tokenizer:
+  max_length: 512
+
+# ===== Quantization Configurations =====
+quant:
+  load_in_4bit: True
+  quant_type: nf4
+  double_quant: True
+
+# ===== LoRA Configurations =====
+lora:
+  r: 32
+  alpha: 32
+  dropout: 0.05
+  bias: none
+  task_type: CAUSAL_LM
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+# ===== Training Configurations =====
+train:
+  output_dir: adapter_checkpoint/new_file_name
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8
+  learning_rate: 5e-5
+  warmup_ratio: 0.05
+  max_steps: 18000
+  bf16: False
+  fp16: True
+  gradient_checkpointing: True
+  lr_scheduler_type: cosine
+  logging_steps: 10
+  save_steps: 200
+  eval_steps: 200
+  save_total_limit: 2
+  report_to: none
+  optim: paged_adamw_8bit
+  completion_only_loss: True
+
+  load_best_model_at_end: True
+  metric_for_best_model: eval_loss
+  greater_is_better: False
+  eval_strategy: steps
+  save_strategy: steps
