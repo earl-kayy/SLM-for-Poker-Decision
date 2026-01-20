@@ -28,7 +28,7 @@ lora:
 
 # ===== Training Configurations =====
 train:
-  output_dir: adapter_checkpoint/new_file_name
+  output_dir: checkpoints/
   per_device_train_batch_size: 4
   gradient_accumulation_steps: 8
   learning_rate: 5e-5

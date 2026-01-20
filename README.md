@@ -35,12 +35,9 @@ SLM for Poker Decision/
 │   ├── model_loader.py          # Model loading with quantization (Load for train/test)
 │   ├── poker_trainer.py         # Custom trainer for SFT
 │   └── eval.py                  # Evaluation metrics computation
-├── adapter_checkpoint/          # Saved model adapters
-│   ├── gemma_qlora_adapter/     # Fine-tuned Gemma adapter
-│   ├── llama_qlora_adapter/     # Fine-tuned Llama adapter
-└── notebooks/                   # Jupyter notebooks for exploration
-    ├── FineTuning_Gemma-3-1B-IT_first_try.ipynb
-    └── FineTuning_Llama3.2_1B_third_try.ipynb
+└── qlora_adapter/               # Saved model adapters
+    ├── gemma_3_1b_it/           # Fine-tuned Gemma adapter
+    └── llama_3_2_1b_instruct/   # Fine-tuned Llama adapter
 ```
 
 ## Installation
@@ -75,24 +72,26 @@ This script fetches the poker decision dataset and saves it to `data/train/`.
 
 ### 2. Train a Model
 
-Fine-tune a model using an adapter file (where you want to save the fine-tuned adapter) 
-and a configuration file (training configuration):
+First, write a new configuration file following the template of `sample_format.yaml` and place it under `configs/`.
+Here you can specify the model, structure of LoRA, and fine-tuning-related hyperparameters.
 
-**For Llama 3.2 1B:**
+Then, simply fine-tune the model by running `train.py` and specify the path of where you want to save the trained adapter file.
+
+**Example:**
 ```bash
 python train.py \
-  --adapterpath adapter_checkpoint/llama_qlora_adapter \
-  --configurationpath configs/llama.yaml
+  --adapterpath qlora_adapter/new_adapter \
+  --configurationpath configs/sample_format.yaml
 ```
 
 ### 3. Evaluate a Model
 
-Evaluate a fine-tuned model on preflop and postflop test sets:
+Evaluate a fine-tuned model on preflop and postflop test sets using the same adapter path and configuration path as training:
 
 ```bash
 python evaluate.py \
-  --adapterpath adapter_checkpoint/llama_qlora_adapter \
-  --configurationpath configs/llama.yaml
+  --adapterpath qlora_adapter/new_adapter \
+  --configurationpath configs/sample_format.yaml
 ```
 
 This produces:
@@ -122,7 +121,7 @@ Sample template is provided in `configs/sample_format.yaml`
 1. **Load Quantized Model**: Initialize base model with 4-bit quantization (BitsAndBytes)
 2. **Attach LoRA**: Attach LoRA adapters to the base model
 3. **Train**: Supervised fine-tuning using custom PokerTrainer
-4. **Save**: Store adapter weights independently inside `adapter_checkpoint` folder
+4. **Save**: Store adapter weights independently inside `qlora_adapter` folder
 
 #### For Evaluation (Post Fine-tuning)
 1. **Load Quantized Model**: Initialize base model with 4-bit quantization (BitsAndBytes)
