@@ -7,9 +7,9 @@ from src.data_processor import DataProcessor
 from src.eval import evaluate_on_dataset
 from src.model_loader import ModelLoader
 
-parser = ArgumentParser(description="Specify model, tokenizer, and dataset paths")
+parser = ArgumentParser(description="Specify adapter/configuration path")
 parser.add_argument("-a", "--adapterpath", required=True, help="Path to the finetuned model")
-parser.add_argument("-c", "--configurationpath", required=True, help="")
+parser.add_argument("-c", "--configurationpath", required=True, help="Path to training configuration")
 args = parser.parse_args()
 
 adapter_path = args.adapterpath

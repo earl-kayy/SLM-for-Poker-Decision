@@ -7,9 +7,9 @@ from src.data_processor import DataProcessor
 from src.model_loader import ModelLoader
 from src.poker_trainer import PokerTrainer
 
-parser = ArgumentParser(description="Specify train configuration paths")
+parser = ArgumentParser(description="Specify adapter/configuration path")
 parser.add_argument("-a", "--adapterpath", required=True, help="Path to the finetuned model")
-parser.add_argument("-c", "--configurationpath", required=True, help="")
+parser.add_argument("-c", "--configurationpath", required=True, help="Path to training configuration")
 args = parser.parse_args()
 
 adapter_path = args.adapterpath
