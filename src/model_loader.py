@@ -21,7 +21,7 @@ class ModelLoader:
         return BitsAndBytesConfig(
             load_in_4bit=self.quant_cfg["load_in_4bit"],
             bnb_4bit_quant_type = self.quant_cfg["quant_type"],
-            bnb_4bit_compute_dtype = torch.float16,
+            bnb_4bit_compute_dtype = torch.bfloat16,
             bnb_4bit_use_double_quant = self.quant_cfg["double_quant"],
         )
 
@@ -39,7 +39,7 @@ class ModelLoader:
         return model
 
     def _build_lora_config(self) -> LoraConfig:
-        return LoraConfig(
+        lora_cfg = LoraConfig(
             r = self.lora_cfg["r"],
             lora_alpha = self.lora_cfg["alpha"],
             target_modules = self.lora_cfg["target_modules"],
@@ -47,6 +47,7 @@ class ModelLoader:
             bias = self.lora_cfg["bias"],
             task_type = self.lora_cfg["task_type"]
         )
+        return lora_cfg
 
     def _attach_lora(self, model, lora_cfg: LoraConfig):
         model = get_peft_model(model, lora_cfg)
@@ -59,9 +60,9 @@ class ModelLoader:
     def load_to_train(self):
         tokenizer = self._load_tokenizer()
 
-        base_model = self._load_base_model()
+        base_model = self._load_base_model()        
         model = self._prepare_model(base_model)
-
+        
         lora_cfg = self._build_lora_config()
         model = self._attach_lora(model, lora_cfg)
         return model, tokenizer
@@ -69,8 +70,9 @@ class ModelLoader:
     def load_to_test(self, adapter_path: str):
         tokenizer = self._load_tokenizer()
         tokenizer.padding_side = "left"
-        # bnb included
+
         base_model = self._load_base_model()
+
         fine_tuned_model = self._load_finetuned_model(base_model, adapter_path)
         return fine_tuned_model.eval(), tokenizer
     

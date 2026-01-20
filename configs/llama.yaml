@@ -1,5 +1,4 @@
 base_model: meta-llama/Llama-3.2-1B-Instruct
-output_dir: adapter_checkpoint/new_file_name
 
 # ===== Tokenizer Configurations =====
 tokenizer:
@@ -35,8 +34,8 @@ train:
   learning_rate: 5e-5
   warmup_ratio: 0.05
   max_steps: 18000
-  bf16: False
-  fp16: True
+  bf16: True
+  fp16: False
   gradient_checkpointing: True
   lr_scheduler_type: cosine
   logging_steps: 10
